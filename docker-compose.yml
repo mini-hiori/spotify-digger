@@ -1,0 +1,9 @@
+version: '3'
+services:
+  python3:
+    build: .
+    container_name: 'spotify-search-newsong'
+    working_dir: '/app'
+    tty: true # コマンド指定等していないコンテナを起動させたままにするoption
+    volumes:
+      - ./:/app
