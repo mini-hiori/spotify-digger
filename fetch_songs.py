@@ -31,11 +31,13 @@ def fetch_related_artists(artist_uri: str) -> List[Artist]:
     return related_artists
 
 
-def fetch_artist_track(artist_info: Artist) -> Artist:
+def fetch_newest_album(artist_uri: str) -> str:
     """
-    入力Artistのtop_track,newst_albumを取得し、これらを追加したArtistを返す
+    入力artist_uriの最新のalbumを返す
     """
+    albums = spotify.artist_albums(artist_uri)
+    print(albums)
     return None
 
 
-print(related_artists)
+print(fetch_newest_album("spotify:artist:19ojIp8CiO4yOQlvzVJEGS"))
