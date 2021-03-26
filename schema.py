@@ -7,4 +7,10 @@ class Artist:
     url: str
     spotify_uri: str
     image_url: str
-    newest_album_url: str
+
+
+@dataclass
+class Album:
+    name: str
+    url: str
+    image_url: str
