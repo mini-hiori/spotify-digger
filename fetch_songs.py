@@ -6,7 +6,7 @@ from dynamodb import scan_dynamodb, put_dynamodb
 import random
 import requests
 import json
-
+ 
 
 def main():
     """
