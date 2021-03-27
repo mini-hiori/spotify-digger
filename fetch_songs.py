@@ -1,59 +1,60 @@
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-from schema import Artist, Album
+from const import spotify,webhook_url
+
+from schema import Album
 from typing import List
-
-client_id = 'xxxx'
-client_secret = 'xxxx'
-client_credentials_manager = spotipy.oauth2.SpotifyClientCredentials(
-    client_id, client_secret)
-
-spotify = spotipy.Spotify(
-    client_credentials_manager=client_credentials_manager)
+from dynamodb import scan_dynamodb, put_dynamodb
+import random
+import requests
+import json
 
 
 def main():
     """
     DynamoDB投入済みartistsの関連Artistの最新Albumを返す
     """
-    # favorite_artists:List[Artist] = fetch_favorite_artist()
-    favorite_artists = [
-        Artist(
-            name="",
-            url="",
-            spotify_uri="spotify:artist:19ojIp8CiO4yOQlvzVJEGS",
-            image_url=""
-        )
-    ]
-    new_artists: List[Artist] = []
-    for artist in favorite_artists:
-        new_artists += fetch_related_artists(artist.spotify_uri)
+    favorite_artists: str = scan_dynamodb()
+    new_artists: str = []
+    for artist_uri in favorite_artists:
+        candidates: List[str] = fetch_related_artists(artist_uri)
+        new_artists += [i for i in candidates if i not in favorite_artists]
+    # DynamoDB内のartistの関連artistのうち、まだDynamoDBにいない3人をdigる
+    # あえてnew_artistsの重複排除はしない(重複したartistはピックアップ確率があがる？)
+    target_artists: str = random.sample(new_artists,3)
+
     new_albums: List[Album] = []
-    for artist in new_artists:
-        albums = fetch_albums(artist.spotify_uri)
+    for artist_uri in target_artists:
+        albums = fetch_albums(artist_uri)
         if albums:
             new_albums.append(albums[0])
-    for index in range(len(new_artists)):
-        print(new_artists[index])
+    for artist in target_artists:
+        put_dynamodb(artist)
+    for index in range(len(new_albums)):
         print(new_albums[index])
+        post_message = {
+            "content": f"""
+            Artist:{new_albums[index].artist_name}
+            Album_name:{new_albums[index].album_name}
+            Album_url:{new_albums[index].album_url}
+            """,
+            "embeds": [{
+                    'description': new_albums[index].album_name,
+                    'image': {
+                        'url': new_albums[index].album_image_url
+                    }
+            }]
+        }
+        requests.post(webhook_url,json.dumps(post_message),headers={'Content-Type': 'application/json'})
 
 
-def fetch_related_artists(artist_uri: str) -> List[Artist]:
+
+def fetch_related_artists(artist_uri: str) -> List[str]:
     """
-    artists_uriを受け取って関連アーティスト情報をArtistにまとめて返す
+    入力artists_uriの関連アーティストのuriを返す
     """
-    response = spotify.artist_related_artists(
-        'spotify:artist:19ojIp8CiO4yOQlvzVJEGS')
-    related_artists: List[Artist] = []
+    response = spotify.artist_related_artists(artist_uri)
+    related_artists: List[str] = []
     for artist in response["artists"]:
-        artist_info = Artist(
-            name=artist["name"],
-            url=artist["external_urls"]["spotify"],
-            spotify_uri=artist["uri"],
-            # アーティスト画像はないこともあるので空を許す
-            image_url=artist["images"][0]["url"] if artist["images"] else ""
-        )
-        related_artists.append(artist_info)
+        related_artists.append(artist["uri"])
     return related_artists
 
 
@@ -65,12 +66,17 @@ def fetch_albums(artist_uri: str) -> List[Album]:
     albums = sorted(albums, key=lambda x: -
                     int(x["release_date"].replace("-", "")))
     for i in range(len(albums)):
+        artist_info = spotify.artist(artist_uri)
         albums[i] = Album(
-            name=albums[i]["name"],
-            url=albums[i]["href"],
-            image_url=albums[i]["images"][0]["url"]
+            album_name=albums[i]["name"],
+            album_url=albums[i]["external_urls"]["spotify"],
+            album_image_url=albums[i]["images"][0]["url"],
+            artist_uri=artist_uri,
+            artist_name=artist_info["name"],
+            artist_url=artist_info["external_urls"]["spotify"]
         )
     return albums
 
 
-print(main())
+if __name__ == "__main__":
+    main()

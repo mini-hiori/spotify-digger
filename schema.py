@@ -2,15 +2,10 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Artist:
-    name: str
-    url: str
-    spotify_uri: str
-    image_url: str
-
-
-@dataclass
 class Album:
-    name: str
-    url: str
-    image_url: str
+    album_name: str
+    album_url: str
+    album_image_url: str
+    artist_uri: str
+    artist_name: str
+    artist_url: str
