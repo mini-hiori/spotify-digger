@@ -2,7 +2,7 @@ version: '3'
 services:
   python3:
     build: .
-    container_name: 'spotify-search-newsong'
+    container_name: 'spotify-digger'
     working_dir: '/app'
     tty: true # コマンド指定等していないコンテナを起動させたままにするoption
     volumes:

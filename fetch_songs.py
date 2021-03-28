@@ -2,7 +2,7 @@ from const import spotify,webhook_url
 
 from schema import Album
 from typing import List
-from dynamodb import scan_dynamodb, put_dynamodb
+from dynamodb import scan_dynamodb, put_dynamodb,delete_dynamodb
 import random
 import requests
 import json
@@ -44,6 +44,11 @@ def main():
             }]
         }
         requests.post(webhook_url,json.dumps(post_message),headers={'Content-Type': 'application/json'})
+    if len(favorite_artists) > 500:
+        # DynamoDBに入れるアーティスト上限 とりあえず500人まで
+        delete_target: List[str] = random.sample(new_artists,3)
+        for uri in delete_target:
+            delete_dynamodb(uri)
 
 
 
