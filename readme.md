@@ -22,7 +22,9 @@
 
 ### 構成図
 ![](https://raw.githubusercontent.com/mini-hiori/spotify-search-newsong/master/docs/architecture.png)
+
 ### 使い方
+- 
 
 ### TODO
 
