@@ -6,26 +6,53 @@
 - DynamoDBとAPIGatewayを自分で使ってみる
 - SpotifyAPIを使ってみる
 
-## やりたいこと
-- あらかじめ保存しておいた好きなアーティスト情報からSpotifyAPIで関連する曲やアーティストを検索する
+## できること
+- あらかじめ保存しておいた好きなアーティスト情報から、好きそうな曲をレコメンドする
     - 「あらかじめ保存」の保存先はDynamoDB、検索する主体はLambda
-    - Spotipyのartist_related_artistsで関連アーティストを検索する
-        - 曲をレコメンドするときは直近のアルバムを返す
+    - Spotipyのartist_related_artistsで関連アーティストを検索し、直近のアルバムを返す
         - レコメンド対象になったアーティストはDynamoDBに追加され、次回の検索の種になる
             - DynamoDBに入っているアーティストは検索対象にしない
-            - 迷走し始めた時用に、DynamoDBの内容を消せるAPIも用意しておく
-                - akinator形式で検索結果を表示するフロントからlike/unlikeを選択できるとよい
-            - DynamoDBの内容はTTL機能を利用してしばらくしたら消す
-- 定期実行も行うが、APIを叩いて任意実行できるようにもする
-    - LambdaをAPIGatewayと統合することで実現
-    - 検索対象がアーティストか曲かでエンドポイントを分ける？
+            - DynamoDBのアーティスト数は一定数を超えないようにする(コストが無限に増えないように)
+                - 現在は上限5000
+- EventBridgeで半日(12時間)に1回実行する
+- 1回の実行結果が気に入らなかった場合に、同時出力されるURLを叩くと再実行できる
+    - 再実行用URLはLambda統合したAPIGatewayのURL
 
 ### 構成図
 ![](https://raw.githubusercontent.com/mini-hiori/spotify-search-newsong/master/docs/architecture.png)
 
 ### 使い方
-- 
+1. リポジトリをduplicate,cloneなどして自分のリポジトリにする
+2. [この記事](https://dev.classmethod.jp/articles/github-action-ecr-push/)を参考にGithub ActionsでECRプッシュする設定を行う
+    - [前回](https://github.com/mini-hiori/lambda-rss-reader-bot)と違って今回のActionsはmasterへのpushがトリガーにしています  
+    developブランチからのプルリクマージをトリガーにデプロイが走るのでこの方がいい感じ
+3. Lambdaを新規作成する。コンテナイメージ利用を選択し、↑のECRのURIを指定する
+4. [この記事](https://dev.startialab.blog/etc/a105)を参考に、↑のLambdaにEventbridgeによるトリガーを設定する
+    - 周期は半日に1回→rate(12 hours)
+5. [この記事](https://dev.classmethod.jp/articles/secure-string-with-lambda-using-parameter-store/#%E4%BB%8A%E3%81%AEwebhook-url%E3%81%AE%E6%89%B1%E3%81%84)を参考に、以下2つをSystems Managerパラメータストアに配置する
+    1. 送りたいDiscord-WebhookのURL
+    2. SpotifyAPIのclient id
+    3. SpotifyAPIのclient secret
+        - 1,3は暗号化推奨
+6. 3.LambdaのロールにSSM参照権限と暗号化パラメータの複合権限、DynamoDBの書き込み権限を付与する
+    - SSM参照権限→SSMReadOnlyAccessでOK
+    - 複合権限はkms:Decrypt。AWS管理ポリシーに該当するものがないので自力でポリシーを作成する必要がある
+        - [参考](https://qiita.com/minamijoyo/items/c6c6770f04c24a695081)
+    - DynamoDB書き込みの権限は最小のものがAWS管理ポリシーにないので自力で作った方がよい
+        - 面倒ならDynamoDBFullAccessでも動作に支障はない
+7. [この記事](https://qiita.com/blackcat5016/items/e41f7fb8b6b7a0c9b90b)などを参考にDynamoDBを作成する
+    - 最初の検索の種として最低1レコードは好きなアーティストを入れておく
+    - テーブル定義はとりあえず以下。今のところ実際にはspotify_uriしか使わない
+
+|  spotify_uri(PK)  |  name  |  craeted_date  |  unixtime  |
+| ---- | ---- | ---- | ---- |
+|  アーティストのSpotifyURI |  アーティスト名  |  レコード作成日  |  レコード作成日のunixtime  |
+
+8. [この記事]()などを参考にAPIGatewayを作成し、3.Lambdaと統合する
 
 ### TODO
+- DynamoDBのメンテをAPI化したい
+    - レコメンドがあまり好きでない方向に行き始めた場合はDynamoDB内のアーティストを消す必要があるが、今のところ手動でやるしかない
+    - 削除用Lambda+APIGatewayを別途作る？
 
 ### よくわからんポイント
