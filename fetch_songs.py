@@ -1,12 +1,12 @@
-from const import spotify,webhook_url
+from const import spotify, webhook_url, gateway_url
 
 from schema import Album
 from typing import List
-from dynamodb import scan_dynamodb, put_dynamodb,delete_dynamodb
+from dynamodb import scan_dynamodb, put_dynamodb, delete_dynamodb
 import random
 import requests
 import json
- 
+
 
 def main():
     """
@@ -19,7 +19,7 @@ def main():
         new_artists += [i for i in candidates if i not in favorite_artists]
     # DynamoDB内のartistの関連artistのうち、まだDynamoDBにいない3人をdigる
     # あえてnew_artistsの重複排除はしない(重複したartistはピックアップ確率があがる？)
-    target_artists: str = random.sample(new_artists,3)
+    target_artists: str = random.sample(new_artists, 3)
 
     new_albums: List[Album] = []
     for artist_uri in target_artists:
@@ -37,19 +37,29 @@ def main():
             Album_url:{new_albums[index].album_url}
             """,
             "embeds": [{
-                    'description': new_albums[index].album_name,
-                    'image': {
-                        'url': new_albums[index].album_image_url
-                    }
+                'description': new_albums[index].album_name,
+                'image': {
+                    'url': new_albums[index].album_image_url
+                }
             }]
         }
-        requests.post(webhook_url,json.dumps(post_message),headers={'Content-Type': 'application/json'})
+        requests.post(
+            webhook_url,
+            json.dumps(post_message),
+            headers={
+                'Content-Type': 'application/json'})
     if len(favorite_artists) > 500:
         # DynamoDBに入れるアーティスト上限 とりあえず500人まで
-        delete_target: List[str] = random.sample(new_artists,3)
+        delete_target: List[str] = random.sample(new_artists, 3)
         for uri in delete_target:
             delete_dynamodb(uri)
+    reload_message = {
+        "reload": gateway_url
+    }
+    requests.post(reload_message, json.dumps(post_message),
+                  headers={'Content-Type': 'application/json'})
 
+    return None
 
 
 def fetch_related_artists(artist_uri: str) -> List[str]:
