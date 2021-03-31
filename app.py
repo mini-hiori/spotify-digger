@@ -11,7 +11,17 @@ def handler(event, context):
     """
     try:
         main()
-        return json.dumps({"result": "OK"})
+        return {
+            'isBase64Encoded': False,
+            'statusCode': 200,
+            'headers': {},
+            'body': json.dumps({"result": "OK"})
+        }
     except BaseException:
         error_message = traceback.format_exc()
-        return json.dumps({"result": "NG", "error_message": error_message})
+        return {
+            'isBase64Encoded': False,
+            'statusCode': 200,
+            'headers': {},
+            'body': json.dumps({"result": "NG", "error_message": error_message})
+        }
