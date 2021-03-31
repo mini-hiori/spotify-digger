@@ -53,6 +53,7 @@ def main():
         delete_target: List[str] = random.sample(new_artists, 3)
         for uri in delete_target:
             delete_dynamodb(uri)
+    # リロード用URLを表示するつもりだったのだが↓、これを送るとAPIGateway実行が無限ループするので一旦保留
     # reload_message = {
     #     "content": f"""
     #         reload: {gateway_url}
