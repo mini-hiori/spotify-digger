@@ -58,8 +58,8 @@ def main():
             reload: {gateway_url}
         """
     }
-    requests.post(webhook_url, json.dumps(reload_message),
-                  headers={'Content-Type': 'application/json'})
+    # requests.post(webhook_url, json.dumps(reload_message),
+    #               headers={'Content-Type': 'application/json'})
 
     return None
 
