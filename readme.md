@@ -50,7 +50,7 @@
 |  アーティストのSpotifyURI |  アーティスト名  |  レコード作成日  |  レコード作成日のunixtime  |
 
 9. [この記事](https://dev.classmethod.jp/articles/api-gateway-lambda-integration-fabu/)などを参考にAPIGatewayを作成し、3.Lambdaと統合する
-    - Lambdaプロキシ統合を使いたい場合はLambdaの戻り値を厳密にjsonにしないとダメ ただ今回はAPIとしてLambdaが呼べれば良いだけなので、非プロキシLambda統合でも問題ない
+    - Lambdaプロキシ統合を使いたい場合はLambdaの戻り値をAPIGatewayに対応する形式にしないとダメ ただ今回はAPIとしてLambdaが呼べれば良いだけなので、非プロキシLambda統合でも問題ない
         - https://qiita.com/polarbear08/items/3f5b8584154931f99f43
 
 ### TODO
