@@ -2,6 +2,7 @@ import sys
 import traceback
 from fetch_songs import main
 import os
+import json
 
 
 def handler(event, context):
@@ -10,7 +11,7 @@ def handler(event, context):
     """
     try:
         main()
-        return {"result": "OK"}
+        return json.dumps({"result": "OK"})
     except BaseException:
         error_message = traceback.format_exc()
-        return {"result": "NG", "error_message": error_message}
+        return json.dumps({"result": "NG", "error_message": error_message})
