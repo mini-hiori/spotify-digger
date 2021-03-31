@@ -54,7 +54,9 @@ def main():
         for uri in delete_target:
             delete_dynamodb(uri)
     reload_message = {
-        "reload": gateway_url
+        "content": f"""
+            reload: {gateway_url}
+        """
     }
     requests.post(webhook_url, json.dumps(reload_message),
                   headers={'Content-Type': 'application/json'})
