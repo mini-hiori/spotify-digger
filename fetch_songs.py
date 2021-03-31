@@ -56,7 +56,7 @@ def main():
     reload_message = {
         "reload": gateway_url
     }
-    requests.post(reload_message, json.dumps(post_message),
+    requests.post(webhook_url, json.dumps(reload_message),
                   headers={'Content-Type': 'application/json'})
 
     return None
