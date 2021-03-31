@@ -21,7 +21,7 @@ def handler(event, context):
         error_message = traceback.format_exc()
         return {
             'isBase64Encoded': False,
-            'statusCode': 200,
+            'statusCode': 500,
             'headers': {},
             'body': json.dumps({"result": "NG", "error_message": error_message})
         }
