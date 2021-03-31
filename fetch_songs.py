@@ -53,11 +53,11 @@ def main():
         delete_target: List[str] = random.sample(new_artists, 3)
         for uri in delete_target:
             delete_dynamodb(uri)
-    reload_message = {
-        "content": f"""
-            reload: {gateway_url}
-        """
-    }
+    # reload_message = {
+    #     "content": f"""
+    #         reload: {gateway_url}
+    #     """
+    # }
     # requests.post(webhook_url, json.dumps(reload_message),
     #               headers={'Content-Type': 'application/json'})
 
